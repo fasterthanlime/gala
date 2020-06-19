@@ -218,9 +218,22 @@ namespace Meta {
 #else
 		public BackgroundActor (Meta.Screen screen, int monitor);
 #endif
+#if HAS_MUTTER338
+		[NoAccessorMethod]
+		public Meta.Display meta_display { owned get; construct; }
+		[NoAccessorMethod]
+		public int monitor { get; construct; }
+	}
+	[CCode (cheader_filename = "meta/main.h", type_id = "meta_background_content_get_type ()")]
+	public class BackgroundContent : GLib.Object, Clutter.Content {
+		[CCode (has_construct_function = false, type = "ClutterContent*")]
+		public BackgroundContent (Meta.Display display, int monitor);
+#endif
 		public void set_background (Meta.Background background);
 		public void set_gradient (bool enabled, int height, double tone_start);
+#if !HAS_MUTTER338
 		public void set_monitor (int monitor);
+#endif
 		public void set_vignette (bool enabled, double brightness, double sharpness);
 		[NoAccessorMethod]
 		public Meta.Background background { owned get; set; }
@@ -343,6 +356,10 @@ namespace Meta {
 		public void unmanage ();
 		public void window_opacity_changed (Meta.Window window);
 		public void window_shape_changed (Meta.Window window);
+#if HAS_MUTTER338
+		[NoAccessorMethod]
+		public Meta.Backend backend { owned get; construct; }
+#endif
 #if HAS_MUTTER334
 		[NoAccessorMethod]
 		public Meta.Display display { owned get; construct; }
@@ -361,6 +378,10 @@ namespace Meta {
 #endif
 		public unowned Cogl.Texture get_sprite ();
 		public void set_pointer_visible (bool visible);
+#if HAS_MUTTER338
+		[NoAccessorMethod]
+		public Meta.Backend backend { owned get; construct; }
+#endif
 		public signal void cursor_changed ();
 #if HAS_MUTTER332
 		public signal void cursor_moved (float x, float y);
@@ -743,6 +764,10 @@ namespace Meta {
 	public class RemoteAccessController : GLib.Object {
 		[CCode (has_construct_function = false)]
 		protected RemoteAccessController ();
+#if HAS_MUTTER338
+		public void inhibit_remote_access ();
+		public void uninhibit_remote_access ();
+#endif
 		public signal void new_handle (Meta.RemoteAccessHandle object);
 	}
 	[CCode (cheader_filename = "meta/meta-remote-access-controller.h", type_id = "meta_remote_access_handle_get_type ()")]
@@ -753,6 +778,10 @@ namespace Meta {
 		public bool get_disable_animations ();
 #endif
 		public virtual void stop ();
+#if HAS_MUTTER338
+		[NoAccessorMethod]
+		public bool is_recording { get; construct; }
+#endif
 		public signal void stopped ();
 	}
 #else
@@ -957,6 +986,18 @@ namespace Meta {
 		[CCode (cheader_filename = "meta/theme.h")]
 		public static unowned Meta.Theme @new ();
 	}
+#if HAS_MUTTER338
+	[CCode (cheader_filename = "meta/main.h", type_id = "meta_wayland_client_get_type ()")]
+	public class WaylandClient : GLib.Object {
+		[CCode (has_construct_function = false)]
+		public WaylandClient (GLib.SubprocessLauncher launcher) throws GLib.Error;
+		public void hide_from_window_list (Meta.Window window);
+		public bool owns_window (Meta.Window window);
+		public void show_in_window_list (Meta.Window window);
+		public GLib.Subprocess spawn (Meta.Display display, GLib.Error? error, string argv0, ...);
+		public GLib.Subprocess spawnv (Meta.Display display, [CCode (array_length = false, array_null_terminated = true)] string[] argv) throws GLib.Error;
+	}
+#endif
 	[CCode (cheader_filename = "meta/window.h", type_id = "meta_window_get_type ()")]
 	public abstract class Window : GLib.Object {
 		[CCode (has_construct_function = false)]
@@ -1057,8 +1098,10 @@ namespace Meta {
 		public void move_resize_frame (bool user_op, int root_x_nw, int root_y_nw, int w, int h);
 		public void move_to_monitor (int monitor);
 		public void raise ();
+#if !HAS_MUTTER338
 		public bool requested_bypass_compositor ();
 		public bool requested_dont_bypass_compositor ();
+#endif
 		public void set_compositor_private (GLib.Object priv);
 		public void set_demands_attention ();
 		public void set_icon_geometry (Meta.Rectangle? rect);
@@ -1139,6 +1182,9 @@ namespace Meta {
 #endif
 		[CCode (has_construct_function = false)]
 		protected WindowActor ();
+#if HAS_MUTTER338
+		public void freeze ();
+#endif
 #if HAS_MUTTER334
 		public Cairo.Surface? get_image (Cairo.RectangleInt? clip);
 #endif
@@ -1154,11 +1200,16 @@ namespace Meta {
 #endif
 		public bool is_destroyed ();
 		public void sync_visibility ();
+#if HAS_MUTTER338
+		public void thaw ();
+#endif
 		public Meta.Window meta_window { get; construct; }
+#if !HAS_MUTTER338
 		[NoAccessorMethod]
 		public string shadow_class { owned get; set; }
 		[NoAccessorMethod]
 		public Meta.ShadowMode shadow_mode { get; set; }
+#endif
 #if HAS_MUTTER334
 		public signal void damaged ();
 #endif
@@ -1204,6 +1255,10 @@ namespace Meta {
 		public int index ();
 		public GLib.List<weak Meta.Window> list_windows ();
 		public void set_builtin_struts (GLib.SList<Meta.Strut?> struts);
+#if HAS_MUTTER338
+		[NoAccessorMethod]
+		public bool active { get; }
+#endif
 		[NoAccessorMethod]
 		public uint n_windows { get; }
 		[NoAccessorMethod]
@@ -1430,6 +1485,9 @@ namespace Meta {
 		POINTING_HAND,
 		CROSSHAIR,
 		IBEAM,
+#if HAS_MUTTER338
+		BLANK,
+#endif
 		LAST
 	}
 	[CCode (cheader_filename = "meta/util.h", cprefix = "META_DEBUG_", type_id = "meta_debug_topic_get_type ()")]
@@ -1957,6 +2015,10 @@ namespace Meta {
 	public const int VIRTUAL_CORE_POINTER_ID;
 	[CCode (cheader_filename = "meta/main.h")]
 	public static bool activate_session ();
+#if HAS_MUTTER338
+	[CCode (cheader_filename = "meta/main.h")]
+	public static void add_clutter_debug_flags (Clutter.DebugFlag debug_flags, Clutter.DrawDebugFlag draw_flags, Clutter.PickDebugFlag pick_flags);
+#endif
 	[CCode (cheader_filename = "meta/main.h")]
 	public static void clutter_init ();
 	[CCode (cheader_filename = "meta/main.h")]
@@ -1973,6 +2035,10 @@ namespace Meta {
 	public static void quit (Meta.ExitCode code);
 	[CCode (cheader_filename = "meta/main.h")]
 	public static void register_with_session ();
+#if HAS_MUTTER338
+	[CCode (cheader_filename = "meta/main.h")]
+	public static void remove_clutter_debug_flags (Clutter.DebugFlag debug_flags, Clutter.DrawDebugFlag draw_flags, Clutter.PickDebugFlag pick_flags);
+#endif
 	[CCode (cheader_filename = "meta/main.h")]
 	public static void restart (string? message);
 	[CCode (cheader_filename = "meta/main.h")]
