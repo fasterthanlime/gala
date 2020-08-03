@@ -58,6 +58,8 @@ namespace Gala {
 
         public ScreenShield? screen_shield { get; private set; }
 
+        private KeyboardManager? keyboard_manager = null;
+
         Meta.PluginInfo info;
 
         WindowSwitcher? winswitcher = null;
@@ -152,8 +154,8 @@ namespace Gala {
 #if HAS_MUTTER330
             unowned Meta.Display display = get_display ();
 #else
-            var screen = get_screen ();
-            var display = screen.get_display ();
+            unowned Meta.Screen screen = get_screen ();
+            unowned Meta.Display display = screen.get_display ();
 #endif
 
             screen_shield = new ScreenShield (this);
@@ -167,7 +169,7 @@ namespace Gala {
 #else
             WindowListener.init (screen);
 #endif
-            KeyboardManager.init (display);
+            keyboard_manager = new KeyboardManager (display);
 
 #if HAS_MUTTER330
             notification_stack = new NotificationStack (display);
